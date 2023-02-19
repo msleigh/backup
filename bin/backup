@@ -2,32 +2,41 @@
 
 set -eu
 set -o pipefail
-set -x
+#set -x
 
 # Setup
 
 source config.bash
 source functions.bash
 
-# Get arguments
+main () {
 
-if [[ "$#" -ne 2 ]] ; then
-    usage
-    err "Incorrect number of arguments" 2
-fi
+    # Get arguments
 
-TARGET="$1"
-DESTINATION="$2"
+    if [[ "$#" -ne 2 ]] ; then
+        usage
+        err "Incorrect number of arguments" 2
+    fi
 
-# Check locations exist/writable
+    TARGET="$1"
+    DESTIN="$2"
+    readonly DESTIN
+    readonly TARGET
 
-[[ -r "${TARGET}" ]]      || err "Backup target ${TARGET} does not exist or have read permission" 3
-[[ -d "${DESTINATION}" ]] || err "Backup destination ${DESTINATION} does not exist or is not a directory" 4
-[[ -w "${DESTINATION}" ]] || err "Backup destination ${DESTINATION} does not write permission" 5
+    # Dry run to flush out errors
 
-# Do backup
+    # Use of -s to protect spaces in $TARGET and $DESTIN (although seemed OK without this)
+    # Use of --rsync-path required to ensure brew-installed version of rsync used on remote side, otherwise -s not
+    # available
+    rsync -avzs --rsync-path="${RSYNC_PATH}" --dry-run "${TARGET}" "${DESTIN}" || err "Failed on dry run" 3
 
-date
-rsync -avz "${TARGET}" "${DESTINATION}"
+    # Backup
+
+    date
+    rsync -avzs --rsync-path="${RSYNC_PATH}" --itemize-changes "${TARGET}" "${DESTIN}"
+
+}
+
+main "$@"
 
 exit 0
