@@ -25,15 +25,16 @@ main () {
 
     # Dry run to flush out errors
 
-    # Use of -s to protect spaces in $TARGET and $DESTIN (although seemed OK without this)
-    # Use of --rsync-path required to ensure brew-installed version of rsync used on remote side, otherwise -s not
-    # available
-    rsync -avzs --rsync-path="${RSYNC_PATH}" --dry-run "${TARGET}" "${DESTIN}" || err "Failed on dry run" 3
+    # NB
+    # - Explicit path to local brew-installed rsync, as calling this from cron - otherwise -s not available
+    # - Use of -s to protect spaces in $TARGET and $DESTIN (although seemed OK without this)
+    # - Use of --rsync-path to ensure brew-installed version of rsync on remote side, otherwise -s not available
+    "${RSYNC_PATH}" -avzs --delete --rsync-path="${RSYNC_PATH}" --dry-run "${TARGET}" "${DESTIN}" || err "Failed on dry run" 3
 
     # Backup
 
     date
-    rsync -avzs --rsync-path="${RSYNC_PATH}" --itemize-changes "${TARGET}" "${DESTIN}"
+    "${RSYNC_PATH}" -avzs --delete --rsync-path="${RSYNC_PATH}" --itemize-changes --no-perms "${TARGET}" "${DESTIN}"
 
 }
 
