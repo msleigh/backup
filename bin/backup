@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+
+set -eu
+set -o pipefail
+set -x
+
+# Setup
+
+source config.bash
+source functions.bash
+
+# Get arguments
+
+if [[ "$#" -ne 2 ]] ; then
+    usage
+    err "Incorrect number of arguments" 2
+fi
+
+TARGET="$1"
+DESTINATION="$2"
+
+# Check locations exist/writable
+
+[[ -r "${TARGET}" ]]      || err "Backup target ${TARGET} does not exist or have read permission" 3
+[[ -d "${DESTINATION}" ]] || err "Backup destination ${DESTINATION} does not exist or is not a directory" 4
+[[ -w "${DESTINATION}" ]] || err "Backup destination ${DESTINATION} does not write permission" 5
+
+# Do backup
+
+date
+rsync -avz "${TARGET}" "${DESTINATION}"
+
+exit 0
