@@ -2,38 +2,35 @@
 
 set -eu
 set -o pipefail
-#set -x
 
-# Setup
+RSYNC_PATH="/usr/local/bin/rsync"
 
-source config.bash
-source functions.bash
+usage () {
+    echo "backup <target> <destination>" >&2
+}
+
+err () {
+    echo "${1:-"Unknown error"}" >&2
+    exit "${2:-127}"
+}
 
 main () {
-
-    # Get arguments
 
     if [[ "$#" -ne 2 ]] ; then
         usage
         err "Incorrect number of arguments" 2
     fi
 
-    TARGET="$1"
-    DESTIN="$2"
-    readonly DESTIN
-    readonly TARGET
+    readonly TARGET="$1"
+    readonly DESTIN="$2"
 
-    # Dry run to flush out errors
+    echo " $(date): Backup"
+    echo "-------------------------"
+    echo
 
-    # NB
-    # - Explicit path to local brew-installed rsync, as calling this from cron - otherwise -s not available
-    # - Use of -s to protect spaces in $TARGET and $DESTIN (although seemed OK without this)
-    # - Use of --rsync-path to ensure brew-installed version of rsync on remote side, otherwise -s not available
-    "${RSYNC_PATH}" -avzs --delete --rsync-path="${RSYNC_PATH}" --dry-run "${TARGET}" "${DESTIN}" || err "Failed on dry run" 3
-
-    # Backup
-
-    date
+    # Explicit path to local brew-installed rsync, as calling this from cron - otherwise -s not available
+    # -s to protect spaces in $TARGET and $DESTIN (although seemed OK without this)
+    # --rsync-path to ensure brew-installed version of rsync on remote side, otherwise -s not available
     "${RSYNC_PATH}" -avzs --delete --rsync-path="${RSYNC_PATH}" --itemize-changes --no-perms "${TARGET}" "${DESTIN}"
 
 }
